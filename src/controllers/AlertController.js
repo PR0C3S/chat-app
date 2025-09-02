@@ -1,3 +1,4 @@
+import { Alert } from "../models/Alert.js";
 import { getSocket } from "../plugins/Socket.js";
 import { AlertRepositoryInstance } from "../repositories/AlertRepository.js";
 
@@ -18,13 +19,7 @@ export class AlertController {
         return res.status(400).json({ message: "Faltan campos" });
       }
 
-      const newAlert = {
-        id: Date.now(),
-        message,
-        location,
-        timestamp: new Date().toISOString(),
-      };
-
+      const newAlert = new Alert(message, location);
       AlertRepositoryInstance.create(newAlert);
 
       // Emitir alerta a todos los clientes conectados
