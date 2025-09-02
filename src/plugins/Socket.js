@@ -13,8 +13,6 @@ export function initSocket(server) {
     });
 
     ioInstance.on("connection", (socket) => {
-      console.log("New client connected:", socket.id);
-
       // System message
       socket.broadcast.emit("message", {
         sender: "T-CHATS",
