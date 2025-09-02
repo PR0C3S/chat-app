@@ -26,7 +26,7 @@ expose REST endpoints for alert history and manual alert triggering.
 Clone the project
 
 ```bash
-  git clone https://link-to-project
+  git clone https://github.com/PR0C3S/chat-app.git
 ```
 
 Go to the project directory
