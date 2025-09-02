@@ -1,5 +1,3 @@
-// AlertController.js
-
 import { getSocket } from "../plugins/Socket.js";
 import { AlertRepositoryInstance } from "../repositories/AlertRepository.js";
 
