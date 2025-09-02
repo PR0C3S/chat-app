@@ -1,84 +1,35 @@
 const socket = io();
 
+// ----- DOM elements -----
 const $messageForm = document.querySelector("#message-form");
 const $inputMessage = $messageForm.querySelector("#message");
 const $inputName = $messageForm.querySelector("#name");
 const $btnSendMessage = $messageForm.querySelector("#btnSendMessage");
 const $chatContainer = document.querySelector("#chat-container");
 
-document.querySelector("#new-alert-form").addEventListener("submit", (e) => {
+// ----- Send chat message -----
+$messageForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const message = document.querySelector("#alertMessage").value;
-  const location = document.querySelector("#alertLocation").value;
+  const sender = $inputName.value.trim();
+  const message = $inputMessage.value.trim();
 
-  socket.emit("create-alert", { message, location }, (response) => {
-    e.target.reset();
-    bootstrap.Modal.getInstance(
-      document.querySelector("#modalNewAlert")
-    ).hide();
+  if (!sender || !message) return;
+
+  $inputName.setAttribute("disabled", "disabled");
+  $inputMessage.setAttribute("disabled", "disabled");
+  $btnSendMessage.setAttribute("disabled", "disabled");
+
+  socket.emit("send-message", { sender, message }, (error) => {
+    if (error) return console.error(error);
+
+    $btnSendMessage.removeAttribute("disabled");
+    $inputMessage.removeAttribute("disabled");
+    $inputMessage.value = "";
+    $inputMessage.focus();
   });
 });
 
-document
-  .querySelector("#modalLastAlerts")
-  .addEventListener("show.bs.modal", async () => {
-    try {
-      const res = await fetch("http://localhost:3000/alerts/history");
-      const alerts = await res.json();
-
-      const list = document.querySelector("#alertsList");
-      list.innerHTML = "";
-
-      if (!alerts || alerts.length === 0) {
-        list.innerHTML = `<li class="list-group-item text-muted">No hay alertas</li>`;
-        return;
-      }
-
-      alerts.forEach((a) => {
-        const item = `
-          <li class="list-group-item">
-            <strong>${a.message}</strong>
-            <div class="small text-muted">
-              ID: ${a.id} | ${a.location} | ${a.timestamp}
-            </div>
-          </li>`;
-        list.insertAdjacentHTML("beforeend", item);
-      });
-    } catch (err) {
-      console.error("Error cargando alertas:", err);
-    }
-  });
-
-document
-  .querySelector("#new-alert-form")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const message = document.querySelector("#alertMessage").value;
-    const location = document.querySelector("#alertLocation").value;
-
-    try {
-      const res = await fetch("http://localhost:3000/alerts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, location }),
-      });
-
-      if (!res.ok) throw new Error("Error creando alerta");
-      const data = await res.json();
-      e.target.reset();
-
-      bootstrap.Modal.getInstance(
-        document.querySelector("#modalNewAlert")
-      ).hide();
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-function sendMessage(message) {
-  socket.emit("send-message", message);
-}
-
+// ----- Render chat messages -----
 function renderMessage({ sender, message, time, isMine }) {
   const bubble = `
     <div class="d-flex ${
@@ -99,6 +50,7 @@ function renderMessage({ sender, message, time, isMine }) {
   $chatContainer.scrollTop = $chatContainer.scrollHeight;
 }
 
+// ----- Show toast for alerts -----
 function showToast(alert) {
   document.getElementById("toastMessage").textContent = alert.message;
   document.getElementById("toastId").textContent = alert.id;
@@ -110,6 +62,7 @@ function showToast(alert) {
   toast.show();
 }
 
+// ----- Listen for chat messages -----
 socket.on("message", (data) => {
   renderMessage({
     sender: data.sender,
@@ -119,6 +72,53 @@ socket.on("message", (data) => {
   });
 });
 
+// ----- Listen for new alerts -----
 socket.on("new-alert", (alert) => {
   showToast(alert);
 });
+
+// ----- Handle new alert form -----
+document.querySelector("#new-alert-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const message = document.querySelector("#alertMessage").value.trim();
+  const location = document.querySelector("#alertLocation").value.trim();
+  if (!message || !location) return;
+
+  socket.emit("create-alert", { message, location }, () => {
+    e.target.reset();
+    bootstrap.Modal.getInstance(
+      document.querySelector("#modalNewAlert")
+    ).hide();
+  });
+});
+
+// ----- Load last 10 alerts into modal -----
+document
+  .querySelector("#modalLastAlerts")
+  .addEventListener("show.bs.modal", async () => {
+    try {
+      const res = await fetch("http://localhost:3000/alerts/history");
+      const alerts = await res.json();
+
+      const list = document.querySelector("#alertsList");
+      list.innerHTML = "";
+
+      if (!alerts || alerts.length === 0) {
+        list.innerHTML = `<li class="list-group-item text-muted">No hay alertas</li>`;
+        return;
+      }
+
+      alerts.forEach((a) => {
+        const item = `
+        <li class="list-group-item">
+          <strong>${a.message}</strong>
+          <div class="small text-muted">
+            ID: ${a.id} | ${a.location} | ${a.timestamp}
+          </div>
+        </li>`;
+        list.insertAdjacentHTML("beforeend", item);
+      });
+    } catch (err) {
+      console.error("Error cargando alertas:", err);
+    }
+  });
