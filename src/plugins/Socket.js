@@ -41,11 +41,10 @@ export function initSocket(server) {
       });
 
       // Optional: Listen for alerts created via socket
-      socket.on("create-alert", async (alertData, callback) => {
+      socket.on("new-alert", async (newAlert, callback) => {
         // handle saving alert in your service/repo
-        const newAlert = await createAlert(alertData); // your function
         ioInstance.emit("new-alert", newAlert);
-        callback(newAlert);
+        callback();
       });
     });
   }

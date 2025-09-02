@@ -39,7 +39,7 @@ function renderMessage({ sender, message, time, isMine }) {
       <div class="p-2 ${
         isMine ? "bg-primary text-white" : "bg-secondary text-white"
       } rounded-3" style="max-width: 70%">
-        <div><strong>${isMine ? "Yo" : sender}</strong></div>
+        <div><strong>${isMine ? "Me" : sender}</strong></div>
         <div>${message}</div>
         <div class="small text-light opacity-75 ${
           isMine ? "text-end" : ""
@@ -79,19 +79,31 @@ socket.on("new-alert", (alert) => {
 });
 
 // ----- Handle new alert form -----
-document.querySelector("#new-alert-form").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const message = document.querySelector("#alertMessage").value.trim();
-  const location = document.querySelector("#alertLocation").value.trim();
-  if (!message || !location) return;
+document
+  .querySelector("#new-alert-form")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = document.querySelector("#alertMessage").value.trim();
+    const location = document.querySelector("#alertLocation").value.trim();
+    if (!message || !location) return;
 
-  socket.emit("create-alert", { message, location }, () => {
-    e.target.reset();
-    bootstrap.Modal.getInstance(
-      document.querySelector("#modalNewAlert")
-    ).hide();
+    try {
+      const res = await fetch("http://localhost:3000/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, location }),
+      });
+
+      if (!res.ok) throw new Error("Error creating alert");
+
+      e.target.reset();
+      bootstrap.Modal.getInstance(
+        document.querySelector("#modalNewAlert")
+      ).hide();
+    } catch (err) {
+      console.error("Failed to create alert:", err);
+    }
   });
-});
 
 // ----- Load last 10 alerts into modal -----
 document
