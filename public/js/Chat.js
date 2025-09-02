@@ -18,6 +18,7 @@ $messageForm.addEventListener("submit", (e) => {
   $inputName.setAttribute("disabled", "disabled");
   $inputMessage.setAttribute("disabled", "disabled");
   $btnSendMessage.setAttribute("disabled", "disabled");
+  document.getElementById("display-name").textContent = sender;
 
   socket.emit("send-message", { sender, message }, (error) => {
     if (error) return console.error(error);
