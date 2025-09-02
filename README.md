@@ -53,6 +53,12 @@ Start the server on development
   npm run dev
 ```
 
+UI Design for send and receive messages and alerts
+
+```bash
+ http://localhost:3000
+```
+
 
 ## Authors
 
